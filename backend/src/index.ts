@@ -30,6 +30,7 @@ import dormitoryRoutes from '@/routes/dormitory';
 import alumniRoutes from '@/routes/alumni';
 import healthRoutes from '@/routes/health';
 import feedbackRoutes from '@/routes/feedback';
+import aiRoutes from '@/routes/ai';
 
 // Import middleware
 import { errorHandler } from '@/middleware/errorHandler';
@@ -114,6 +115,7 @@ app.use('/api/dormitory', dormitoryRoutes);
 app.use('/api/alumni', alumniRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/ai', aiRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -145,6 +147,7 @@ app.get('/api', (req, res) => {
       alumni: '/api/alumni',
       health: '/api/health',
       feedback: '/api/feedback',
+      ai: '/api/ai',
     },
   });
 });
