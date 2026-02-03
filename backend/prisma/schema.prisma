@@ -1,0 +1,610 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  fullName  String
+  role      Role     @default(STUDENT)
+  avatar    String?
+  phone     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teacher       Teacher?
+  student       Student?
+  staff         Staff?
+  notifications Notification[]
+  chatMessages  ChatMessage[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+// Class model
+model Class {
+  id               Int    @id @default(autoincrement())
+  code             String @unique
+  name             String
+  gradeLevel       Int
+  academicYear     String
+  homeroomTeacherId Int?
+  studentCount     Int    @default(0)
+  room             String?
+  isActive         Boolean @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  homeroomTeacher Teacher?  @relation(fields: [homeroomTeacherId], references: [id])
+  students        Student[]
+  schedules       Schedule[]
+
+  @@map("classes")
+}
+
+// Teacher model
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  major     String
+  salary    Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user           User         @relation(fields: [userId], references: [id])
+  classes        Class[]
+  subjects       Subject[]
+  lmsMaterials   LMSMaterial[]
+  schedules      Schedule[]
+  exams          Exam[]
+
+  @@map("teachers")
+}
+
+// Student model
+model Student {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  code      String   @unique
+  classId   Int
+  dob       DateTime
+  gender    Gender
+  status    StudentStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user           User            @relation(fields: [userId], references: [id])
+  class          Class           @relation(fields: [classId], references: [id])
+  attendance     Attendance[]
+  grades         Grade[]
+  invoices       Invoice[]
+  medicalRecords MedicalRecord[]
+  healthIncidents HealthIncident[]
+  libraryBooks   LibraryBook[]
+
+  @@map("students")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  GRADUATED
+}
+
+// Subject model
+model Subject {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  credits   Int
+  color     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  teacherId   Int?
+  teacher     Teacher?   @relation(fields: [teacherId], references: [id])
+  lmsMaterials LMSMaterial[]
+  schedules   Schedule[]
+  exams       Exam[]
+  grades      Grade[]
+
+  @@map("subjects")
+}
+
+// Schedule model
+model Schedule {
+  id         Int      @id @default(autoincrement())
+  day        Int      // 2-7 (Monday-Saturday)
+  period     Int      // 1-5
+  subjectId  Int
+  teacherId  Int
+  classId    Int
+  room       String?
+  semester   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  subject Subject @relation(fields: [subjectId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  class   Class   @relation(fields: [classId], references: [id])
+
+  @@unique([day, period, classId])
+  @@map("schedules")
+}
+
+// Attendance model
+model Attendance {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  date      DateTime
+  status    AttendanceStatus
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, date])
+  @@map("attendance")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+// Grade model
+model Grade {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  subjectId Int
+  examType  String   // Midterm, Final, Quiz, etc.
+  score     Float
+  maxScore  Float    @default(100)
+  semester  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@map("grades")
+}
+
+// LMS Material model
+model LMSMaterial {
+  id          Int           @id @default(autoincrement())
+  title       String
+  type        MaterialType
+  subjectId   Int
+  url         String?
+  description String?
+  deadline    DateTime?
+  postedBy    Int
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  subject Subject @relation(fields: [subjectId], references: [id])
+  teacher Teacher @relation(fields: [postedBy], references: [id])
+
+  @@map("lms_materials")
+}
+
+enum MaterialType {
+  VIDEO
+  ASSIGNMENT
+  DOCUMENT
+  QUIZ
+}
+
+// Chat Message model
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  senderId  Int
+  content   String
+  timestamp DateTime @default(now())
+  isRead    Boolean  @default(false)
+
+  // Relations
+  sender User @relation(fields: [senderId], references: [id])
+
+  @@map("chat_messages")
+}
+
+// Invoice model
+model Invoice {
+  id          Int           @id @default(autoincrement())
+  studentId   Int
+  title       String
+  amount      Float
+  dueDate     DateTime
+  status      InvoiceStatus @default(UNPAID)
+  paymentDate DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  OVERDUE
+}
+
+// Library Book model
+model LibraryBook {
+  id           Int            @id @default(autoincrement())
+  title        String
+  author       String
+  category     String
+  cover        String?
+  status       BookStatus     @default(AVAILABLE)
+  borrowedBy   Int?
+  borrowedDate DateTime?
+  dueDate      DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  // Relations
+  borrowedStudent Student? @relation(fields: [borrowedBy], references: [id])
+
+  @@map("library_books")
+}
+
+enum BookStatus {
+  AVAILABLE
+  BORROWED
+  MAINTENANCE
+}
+
+// School Event model
+model SchoolEvent {
+  id          Int      @id @default(autoincrement())
+  title       String
+  date        DateTime
+  type        EventType
+  description String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("school_events")
+}
+
+enum EventType {
+  ACADEMIC
+  HOLIDAY
+  ACTIVITY
+}
+
+// Exam model
+model Exam {
+  id             Int      @id @default(autoincrement())
+  title          String
+  subjectId      Int
+  date           DateTime
+  duration       Int      // minutes
+  totalQuestions Int
+  status         ExamStatus @default(UPCOMING)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@map("exams")
+}
+
+enum ExamStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+}
+
+// Transport Route model
+model TransportRoute {
+  id           Int          @id @default(autoincrement())
+  name         String
+  driverName   String
+  driverPhone  String
+  licensePlate String
+  capacity     Int
+  studentCount Int          @default(0)
+  status       RouteStatus  @default(IDLE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@map("transport_routes")
+}
+
+enum RouteStatus {
+  ON_ROUTE
+  IDLE
+  MAINTENANCE
+}
+
+// Inventory Item model
+model InventoryItem {
+  id          Int              @id @default(autoincrement())
+  name        String
+  category    String
+  quantity    Int
+  location    String
+  condition   ItemCondition    @default(GOOD)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("inventory_items")
+}
+
+enum ItemCondition {
+  GOOD
+  DAMAGED
+  MAINTENANCE
+}
+
+// Staff model
+model Staff {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  role       String
+  department String
+  salary     Float
+  status     StaffStatus @default(ACTIVE)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user        User           @relation(fields: [userId], references: [id])
+  leaveRequests LeaveRequest[]
+
+  @@map("staff")
+}
+
+enum StaffStatus {
+  ACTIVE
+  ON_LEAVE
+}
+
+// Leave Request model
+model LeaveRequest {
+  id          Int           @id @default(autoincrement())
+  staffId     Int
+  type        LeaveType
+  startDate   DateTime
+  endDate     DateTime
+  reason      String
+  status      LeaveStatus   @default(PENDING)
+  approvedBy  Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@map("leave_requests")
+}
+
+enum LeaveType {
+  SICK
+  ANNUAL
+  PERSONAL
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Canteen Item model
+model CanteenItem {
+  id        Int      @id @default(autoincrement())
+  name      String
+  price     Float
+  category  CanteenCategory
+  image     String
+  available Boolean  @default(true)
+  calories  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("canteen_items")
+}
+
+enum CanteenCategory {
+  FOOD
+  DRINK
+  SNACK
+}
+
+// Dorm Room model
+model DormRoom {
+  id       Int        @id @default(autoincrement())
+  name     String
+  type     DormType
+  capacity Int
+  occupied Int        @default(0)
+  status   DormStatus @default(AVAILABLE)
+  block    String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("dorm_rooms")
+}
+
+enum DormType {
+  MALE
+  FEMALE
+}
+
+enum DormStatus {
+  AVAILABLE
+  FULL
+  MAINTENANCE
+}
+
+// Alumnus model
+model Alumnus {
+  id             Int      @id @default(autoincrement())
+  fullName       String
+  graduationYear Int
+  currentJob     String
+  company        String
+  email          String
+  phone          String
+  avatar         String
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("alumni")
+}
+
+// Medical Record model
+model MedicalRecord {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  condition   String
+  allergies   String
+  bloodType   String
+  lastCheckup DateTime
+  notes       String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId])
+  @@map("medical_records")
+}
+
+// Health Incident model
+model HealthIncident {
+  id          Int           @id @default(autoincrement())
+  studentId   Int
+  date        DateTime
+  description String
+  treatment   String
+  severity    SeverityLevel @default(LOW)
+  status      IncidentStatus @default(RESOLVED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id])
+
+  @@map("health_incidents")
+}
+
+enum SeverityLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum IncidentStatus {
+  RESOLVED
+  FOLLOW_UP
+}
+
+// Survey model
+model Survey {
+  id            Int         @id @default(autoincrement())
+  title         String
+  deadline      DateTime
+  participants  Int         @default(0)
+  totalTarget   Int
+  status        SurveyStatus @default(ACTIVE)
+  type          SurveyType
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@map("surveys")
+}
+
+enum SurveyStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum SurveyType {
+  TEACHER_EVAL
+  FACILITY
+  GENERAL
+}
+
+// Feedback model
+model Feedback {
+  id         Int           @id @default(autoincrement())
+  senderName String
+  category   String
+  content    String
+  status     FeedbackStatus @default(NEW)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@map("feedback")
+}
+
+enum FeedbackStatus {
+  NEW
+  READ
+  REPLIED
+}
+
+// Notification model
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
