@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
-import { AILocalService } from '@/services/aiLocalService';
+import { StandaloneAI } from '@/services/standaloneAI';
 import { prisma } from '@/index';
 
 export class AIController {
-  private aiService: AILocalService;
+  private aiService: StandaloneAI;
 
   constructor() {
-    this.aiService = new AILocalService();
+    this.aiService = new StandaloneAI();
   }
 
   // AI Chat Endpoint
@@ -21,7 +21,7 @@ export class AIController {
         });
       }
 
-      const response = await this.aiService.chatWithAI(parseInt(studentId), message);
+      const response = await this.aiService.generateResponse(message, studentId);
 
       res.json({
         success: true,
@@ -47,7 +47,7 @@ export class AIController {
         });
       }
 
-      const content = await this.aiService.generateSmartContent(
+      const content = await this.aiService.generateContent(
         subject,
         topic,
         difficulty,
