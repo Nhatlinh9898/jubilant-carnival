@@ -32,6 +32,7 @@ import healthRoutes from '@/routes/health';
 import feedbackRoutes from '@/routes/feedback';
 import aiRoutes from '@/routes/ai';
 import standaloneAIRoutes from '@/routes/standaloneAI';
+import documentAnalysisRoutes from '@/routes/documentAnalysis';
 
 // Import middleware
 import { errorHandler } from '@/middleware/errorHandler';
@@ -118,6 +119,7 @@ app.use('/api/health', healthRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-standalone', standaloneAIRoutes);
+app.use('/api/documents', documentAnalysisRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -151,6 +153,7 @@ app.get('/api', (req, res) => {
       feedback: '/api/feedback',
       ai: '/api/ai',
       'ai-standalone': '/api/ai-standalone',
+      'documents': '/api/documents',
     },
   });
 });
