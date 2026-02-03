@@ -31,6 +31,7 @@ import alumniRoutes from '@/routes/alumni';
 import healthRoutes from '@/routes/health';
 import feedbackRoutes from '@/routes/feedback';
 import aiRoutes from '@/routes/ai';
+import standaloneAIRoutes from '@/routes/standaloneAI';
 
 // Import middleware
 import { errorHandler } from '@/middleware/errorHandler';
@@ -116,6 +117,7 @@ app.use('/api/alumni', alumniRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai-standalone', standaloneAIRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -148,6 +150,7 @@ app.get('/api', (req, res) => {
       health: '/api/health',
       feedback: '/api/feedback',
       ai: '/api/ai',
+      'ai-standalone': '/api/ai-standalone',
     },
   });
 });
