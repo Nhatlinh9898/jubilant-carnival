@@ -33,6 +33,7 @@ import feedbackRoutes from '@/routes/feedback';
 import aiRoutes from '@/routes/ai';
 import standaloneAIRoutes from '@/routes/standaloneAI';
 import documentAnalysisRoutes from '@/routes/documentAnalysis';
+import mediaLibraryRoutes from '@/routes/mediaLibrary';
 
 // Import middleware
 import { errorHandler } from '@/middleware/errorHandler';
@@ -120,6 +121,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/ai-standalone', standaloneAIRoutes);
 app.use('/api/documents', documentAnalysisRoutes);
+app.use('/api/media', mediaLibraryRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -154,6 +156,7 @@ app.get('/api', (req, res) => {
       ai: '/api/ai',
       'ai-standalone': '/api/ai-standalone',
       'documents': '/api/documents',
+      'media': '/api/media',
     },
   });
 });
