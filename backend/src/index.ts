@@ -34,6 +34,7 @@ import aiRoutes from '@/routes/ai';
 import standaloneAIRoutes from '@/routes/standaloneAI';
 import documentAnalysisRoutes from '@/routes/documentAnalysis';
 import mediaLibraryRoutes from '@/routes/mediaLibrary';
+import contentGenerationRoutes from '@/routes/contentGeneration';
 
 // Import middleware
 import { errorHandler } from '@/middleware/errorHandler';
@@ -122,6 +123,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/ai-standalone', standaloneAIRoutes);
 app.use('/api/documents', documentAnalysisRoutes);
 app.use('/api/media', mediaLibraryRoutes);
+app.use('/api/content', contentGenerationRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -157,6 +159,7 @@ app.get('/api', (req, res) => {
       'ai-standalone': '/api/ai-standalone',
       'documents': '/api/documents',
       'media': '/api/media',
+      'content': '/api/content',
     },
   });
 });
